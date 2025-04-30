@@ -17,7 +17,7 @@ def es_valido(tablero, fila, col, num):
         return False
     return True
 
-# Genera una solución completa por backtracking
+# Rellena completamente el tablero con una solución válida
 def rellenar_sudoku(tablero):
     for fila in range(9):
         for col in range(9):
@@ -28,6 +28,20 @@ def rellenar_sudoku(tablero):
                     if es_valido(tablero, fila, col, num):
                         tablero[fila][col] = num
                         if rellenar_sudoku(tablero):
+                            return True
+                        tablero[fila][col] = 0
+                return False
+    return True
+
+# Resuelve un sudoku incompleto por backtracking
+def resolver_sudoku(tablero):
+    for fila in range(9):
+        for col in range(9):
+            if tablero[fila][col] == 0:
+                for num in range(1, 10):
+                    if es_valido(tablero, fila, col, num):
+                        tablero[fila][col] = num
+                        if resolver_sudoku(tablero):
                             return True
                         tablero[fila][col] = 0
                 return False
@@ -48,7 +62,7 @@ def generar_sudoku(casillas_vacias=40):
             vaciados += 1
     return tablero, tablero_resuelto
 
-# Imprimir tablero con formato Sudoku
+# Imprime el tablero con formato visual
 def imprimir_tablero(tablero):
     for i in range(9):
         if i % 3 == 0 and i != 0:
@@ -59,12 +73,18 @@ def imprimir_tablero(tablero):
             print(tablero[i][j] if tablero[i][j] != 0 else ".", end=" ")
         print()
 
-# Uso
-sudoku, solucion = generar_sudoku(casillas_vacias=40)
-print("Tablero para resolver:")
-imprimir_tablero(sudoku)
+# ------------------------
+# Uso del programa
+# ------------------------
 
-print("\nSolución:")
-imprimir_tablero(solucion)
+# Generar Sudoku con 40 casillas vacías
+sudoku_incompleto, solucion_real = generar_sudoku(casillas_vacias=40)
 
+print("Sudoku para resolver:")
+imprimir_tablero(sudoku_incompleto)
 
+# Resolver el Sudoku por backtracking
+resolver_sudoku(sudoku_incompleto)
+
+print("\nSudoku resuelto:")
+imprimir_tablero(sudoku_incompleto)
