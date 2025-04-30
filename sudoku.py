@@ -18,7 +18,7 @@ def es_valido(tablero, fila, col, num):
     return True
 
 # Genera una solución completa por backtracking
-def resolver_sudoku(tablero):
+def rellenar_sudoku(tablero):
     for fila in range(9):
         for col in range(9):
             if tablero[fila][col] == 0:
@@ -27,7 +27,7 @@ def resolver_sudoku(tablero):
                 for num in nums:
                     if es_valido(tablero, fila, col, num):
                         tablero[fila][col] = num
-                        if resolver_sudoku(tablero):
+                        if rellenar_sudoku(tablero):
                             return True
                         tablero[fila][col] = 0
                 return False
@@ -36,7 +36,7 @@ def resolver_sudoku(tablero):
 # Crea un tablero con huecos para resolver
 def generar_sudoku(casillas_vacias=40):
     tablero = crear_tablero()
-    resolver_sudoku(tablero)
+    rellenar_sudoku(tablero)
     tablero_resuelto = tablero.copy()
     
     vaciados = 0
@@ -66,6 +66,5 @@ imprimir_tablero(sudoku)
 
 print("\nSolución:")
 imprimir_tablero(solucion)
-
 
 
