@@ -35,7 +35,7 @@ def rellenar_sudoku(tablero):
                 return False
     return True
 
-# Resuelve un sudoku incompleto por backtracking (original)
+# Resuelve un sudoku incompleto por backtracking (rápido)
 def resolver_sudoku(tablero):
     for fila in range(9):
         for col in range(9):
@@ -49,7 +49,7 @@ def resolver_sudoku(tablero):
                 return False
     return True
 
-# Simulación visual paso a paso (sin eliminar la versión original)
+# Simulación visual paso a paso con retrocesos
 def resolver_sudoku_simulado(tablero, delay=0.03):
     for fila in range(9):
         for col in range(9):
@@ -105,23 +105,33 @@ def limpiar_consola():
 # Uso del programa
 # ------------------------
 
-# Generar Sudoku con 40 casillas vacías
-sudoku_incompleto, solucion_real = generar_sudoku(casillas_vacias=40)
+# Preguntar cuántas casillas vacías quiere el usuario
+while True:
+    try:
+        n_vacias = int(input("¿Cuántas casillas vacías quieres en el Sudoku (0-81)?: "))
+        if 0 <= n_vacias <= 81:
+            break
+        else:
+            print("Debe estar entre 0 y 81.")
+    except ValueError:
+        print("Introduce un número válido.")
 
-print("Sudoku para resolver:")
+# Generar Sudoku con casillas vacías personalizadas
+sudoku_incompleto, solucion_real = generar_sudoku(casillas_vacias=n_vacias)
+
+print("\nSudoku para resolver:")
 imprimir_tablero(sudoku_incompleto)
 
-# Resolver el Sudoku por backtracking (rápido y silencioso)
+# Resolver el Sudoku (sin mostrar pasos)
 resolver_sudoku(sudoku_incompleto)
 
 print("\nSudoku resuelto:")
 imprimir_tablero(sudoku_incompleto)
 
-# Preguntar si se quiere ver la simulación paso a paso
+# Preguntar si el usuario quiere ver la simulación
 respuesta = input("\n¿Quieres ver cómo se resuelve paso a paso con backtracking? (s/n): ").strip().lower()
 if respuesta == 's':
-    # Regenerar el sudoku incompleto y resolver con simulación
-    sudoku_incompleto, _ = generar_sudoku(casillas_vacias=40)
+    sudoku_incompleto, _ = generar_sudoku(casillas_vacias=n_vacias)
     print("Mostrando Sudoku con animación de resolución:")
     time.sleep(1.5)
     resolver_sudoku_simulado(sudoku_incompleto)
