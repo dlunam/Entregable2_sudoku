@@ -5,42 +5,57 @@ import numpy as np
 from time import perf_counter
 
 # -------------------------------------------------------------------
-# Utilidades de consola
+# Utilidades
 # -------------------------------------------------------------------
 
 def limpiar_consola():
-    """Limpia la pantalla de la consola según el sistema operativo."""
     os.system('cls' if os.name == 'nt' else 'clear')
 
+def imprimir_tablero(tablero):
+    for i in range(9):
+        if i % 3 == 0 and i != 0:
+            print("-" * 21)
+        for j in range(9):
+            if j % 3 == 0 and j != 0:
+                print("|", end=" ")
+            val = tablero[i][j]
+            print(val if val != 0 else ".", end=" ")
+        print()
+
+def mostrar_estado(tablero, mensaje="", delay=0.03):
+    limpiar_consola()
+    if mensaje:
+        print(mensaje)
+    imprimir_tablero(tablero)
+    time.sleep(delay)
+
 # -------------------------------------------------------------------
-# Generación y validación de tableros
+# Tablero y validación
 # -------------------------------------------------------------------
 
 def crear_tablero():
-    """
-    Crea y devuelve un tablero de Sudoku 9x9 vacío (todo ceros).
-    """
     return np.zeros((9, 9), dtype=int)
 
 def es_valido(tablero, fila, col, num):
-    """
-    Comprueba si colocar 'num' en la posición (fila, col) no viola
-    las reglas de Sudoku (fila, columna y subcuadro 3x3).
-    """
-    # Reglas de fila y columna
     if num in tablero[fila] or num in tablero[:, col]:
         return False
-    # Regla de subcuadro 3x3
     f0, c0 = (fila // 3) * 3, (col // 3) * 3
     if num in tablero[f0:f0+3, c0:c0+3]:
         return False
     return True
 
+def obtener_vecinos(i, j):
+    vecinos = set((x, j) for x in range(9) if x != i)
+    vecinos.update((i, x) for x in range(9) if x != j)
+    f0, c0 = (i // 3) * 3, (j // 3) * 3
+    vecinos.update((f0 + x, c0 + y) for x in range(3) for y in range(3) if (f0 + x, c0 + y) != (i, j))
+    return vecinos
+
+# -------------------------------------------------------------------
+# Generación y resolución
+# -------------------------------------------------------------------
+
 def rellenar_sudoku(tablero):
-    """
-    Rellena completamente el tablero con una solución válida usando
-    backtracking aleatorio.
-    """
     for i in range(9):
         for j in range(9):
             if tablero[i][j] == 0:
@@ -56,10 +71,6 @@ def rellenar_sudoku(tablero):
     return True
 
 def generar_sudoku(casillas_vacias=40):
-    """
-    Genera un Sudoku completo y luego vacía 'casillas_vacias' posiciones
-    al azar, devolviendo el tablero incompleto y su solución.
-    """
     tablero = crear_tablero()
     rellenar_sudoku(tablero)
     solucion = tablero.copy()
@@ -71,34 +82,7 @@ def generar_sudoku(casillas_vacias=40):
             vaciados += 1
     return tablero, solucion
 
-# -------------------------------------------------------------------
-# Impresión de tablero
-# -------------------------------------------------------------------
-
-def imprimir_tablero(tablero):
-    """
-    Muestra el tablero en consola con separadores cada 3 filas/columnas.
-    Las casillas vacías se representan con '.'.
-    """
-    for i in range(9):
-        if i % 3 == 0 and i != 0:
-            print("-" * 21)
-        for j in range(9):
-            if j % 3 == 0 and j != 0:
-                print("|", end=" ")
-            celda = tablero[i][j]
-            print(celda if celda != 0 else ".", end=" ")
-        print()
-
-# -------------------------------------------------------------------
-# Backtracking estándar
-# -------------------------------------------------------------------
-
 def resolver_sudoku(tablero):
-    """
-    Resuelve el Sudoku incompleto por backtracking sin heurísticas.
-    Devuelve True si encuentra solución, y deja el tablero resuelto.
-    """
     for i in range(9):
         for j in range(9):
             if tablero[i][j] == 0:
@@ -107,148 +91,125 @@ def resolver_sudoku(tablero):
                         tablero[i][j] = num
                         if resolver_sudoku(tablero):
                             return True
-                        tablero[i][j] = 0  # backtrack
-                return False  # no hay candidato válido
-    return True  # tablero completo
+                        tablero[i][j] = 0
+                return False
+    return True
 
 # -------------------------------------------------------------------
-# Heurística MRV (Minimum Remaining Value)
+# MRV + LCV + Degree
 # -------------------------------------------------------------------
 
-def celdas_vacias_con_opciones(tablero):
-    """
-    Devuelve lista de (fila, col, [opciones]) para cada celda vacía,
-    ordenadas por menor número de opciones (MRV).
-    """
-    celdas = []
-    for i in range(9):
-        for j in range(9):
-            if tablero[i][j] == 0:
-                opciones = [n for n in range(1, 10) if es_valido(tablero, i, j, n)]
-                celdas.append((i, j, opciones))
-    celdas.sort(key=lambda x: len(x[2]))
-    return celdas
+def inicializar_dominios(tablero):
+    return {
+        (i, j): [n for n in range(1, 10) if es_valido(tablero, i, j, n)]
+        for i in range(9) for j in range(9) if tablero[i][j] == 0
+    }
 
-def resolver_sudoku_mrv(tablero):
-    """
-    Resuelve el Sudoku usando backtracking + heurística MRV.
-    """
-    celdas = celdas_vacias_con_opciones(tablero)
-    if not celdas:
-        return True  # tablero completo
-    i, j, opciones = celdas[0]
-    for num in opciones:
-        tablero[i][j] = num
-        if resolver_sudoku_mrv(tablero):
-            return True
-        tablero[i][j] = 0  # backtrack
+def seleccionar_celda(dominios):
+    min_dom = min(len(v) for v in dominios.values())
+    candidatas = [pos for pos in dominios if len(dominios[pos]) == min_dom]
+    return max(candidatas, key=lambda pos: sum(1 for v in obtener_vecinos(*pos) if v in dominios))
+
+def ordenar_por_lcv(celda, dominios):
+    vecinos = obtener_vecinos(*celda)
+    valor_impacto = {
+        val: sum(1 for v in vecinos if v in dominios and val in dominios[v])
+        for val in dominios[celda]
+    }
+    return sorted(valor_impacto, key=valor_impacto.get)
+
+def resolver_mrv(tablero, dominios=None, simular=False, delay=0.03):
+    if dominios is None:
+        dominios = inicializar_dominios(tablero)
+    if not dominios:
+        return True
+    celda = seleccionar_celda(dominios)
+    i, j = celda
+    for valor in ordenar_por_lcv(celda, dominios):
+        tablero[i][j] = valor
+        if simular:
+            mostrar_estado(tablero, "Simulación MRV", delay)
+
+        nuevos_dominios = {k: v[:] for k, v in dominios.items()}
+        del nuevos_dominios[celda]
+        for v in obtener_vecinos(i, j):
+            if v in nuevos_dominios and valor in nuevos_dominios[v]:
+                nuevos_dominios[v].remove(valor)
+                if not nuevos_dominios[v]:
+                    break
+        else:
+            if resolver_mrv(tablero, nuevos_dominios, simular, delay):
+                return True
+        tablero[i][j] = 0
+        if simular:
+            mostrar_estado(tablero, "Retroceso MRV", delay)
     return False
 
 # -------------------------------------------------------------------
-# Simulaciones paso a paso
+# Simulación visual estándar
 # -------------------------------------------------------------------
 
 def resolver_sudoku_simulado(tablero, delay=0.03):
-    """
-    Simula la resolución por backtracking estándar paso a paso.
-    """
     for i in range(9):
         for j in range(9):
             if tablero[i][j] == 0:
                 for num in range(1, 10):
                     if es_valido(tablero, i, j, num):
                         tablero[i][j] = num
-                        limpiar_consola()
-                        print("Simulación: Backtracking Estándar\n")
-                        imprimir_tablero(tablero)
-                        time.sleep(delay)
+                        mostrar_estado(tablero, "Simulación Estándar", delay)
                         if resolver_sudoku_simulado(tablero, delay):
                             return True
                         tablero[i][j] = 0
-                        limpiar_consola()
-                        print("Retroceso Estándar...\n")
-                        imprimir_tablero(tablero)
-                        time.sleep(delay)
+                        mostrar_estado(tablero, "Retroceso Estándar", delay)
                 return False
     return True
 
-def resolver_sudoku_mrv_simulado(tablero, delay=0.03):
-    """
-    Simula la resolución usando heurística MRV paso a paso.
-    """
-    celdas = celdas_vacias_con_opciones(tablero)
-    if not celdas:
-        return True
-    i, j, opciones = celdas[0]
-    for num in opciones:
-        tablero[i][j] = num
-        limpiar_consola()
-        print("Simulación: Heurística MRV\n")
-        imprimir_tablero(tablero)
-        time.sleep(delay)
-        if resolver_sudoku_mrv_simulado(tablero, delay):
-            return True
-        tablero[i][j] = 0
-        limpiar_consola()
-        print("Retroceso MRV...\n")
-        imprimir_tablero(tablero)
-        time.sleep(delay)
-    return False
+# -------------------------------------------------------------------
+# Ejecución principal
+# -------------------------------------------------------------------
 
-# -------------------------------------------------------------------
-# Programa principal
-# -------------------------------------------------------------------
+def simular_resolucion(tablero, modo, funcion):
+    temp = tablero.copy()
+    input(f"\nENTER para simular {modo}...")
+    funcion(temp)
 
 if __name__ == "__main__":
-    # 1) Elegir número de casillas vacías
     while True:
         try:
-            n_vacias = int(input("¿Cuántas casillas vacías quieres en el Sudoku (0–81)?: "))
-            if 0 <= n_vacias <= 81:
+            n = int(input("¿Cuántas casillas vacías quieres en el Sudoku (0–81)?: "))
+            if 0 <= n <= 81:
                 break
             print("Debe estar entre 0 y 81.")
         except ValueError:
             print("Introduce un número válido.")
 
-    # 2) Generar y mostrar tablero para resolver
-    sud, sol = generar_sudoku(casillas_vacias=n_vacias)
+    sudoku, solucion = generar_sudoku(n)
     print("\nSudoku para resolver:")
-    imprimir_tablero(sud)
+    imprimir_tablero(sudoku)
 
-    # 3) Resolver y mostrar solución estándar
-    tab_est = sud.copy()
-    resolver_sudoku(tab_est)
+    copia1 = sudoku.copy()
+    resolver_sudoku(copia1)
     print("\nSolución (Backtracking Estándar):")
-    imprimir_tablero(tab_est)
+    imprimir_tablero(copia1)
 
-    # 4) Comparar tiempos de ambos métodos
     t1 = perf_counter()
-    resolver_sudoku(sud.copy())
+    resolver_sudoku(sudoku.copy())
     t1 = perf_counter() - t1
 
     t2 = perf_counter()
-    resolver_sudoku_mrv(sud.copy())
-
+    resolver_mrv(sudoku.copy())
     t2 = perf_counter() - t2
 
     print(f"\nTiempo Estándar: {t1:.6f} s")
-    print(f"Tiempo MRV:      {t2:.6f} s")
+    print(f"Tiempo MRV Mejorado: {t2:.6f} s")
 
-    # 5) Preguntar simulación
     print("\n¿Quieres ver simulación paso a paso?")
     print("1) Estándar\n2) MRV\n3) Ambos\nOtro) Ninguno")
     opción = input("Elige opción: ").strip()
 
     if opción in ('1', '3'):
-        temp = sud.copy()
-        input("\nENTER para simular Estándar...")
-        resolver_sudoku_simulado(temp)
-
+        simular_resolucion(sudoku, "Estándar", resolver_sudoku_simulado)
     if opción in ('2', '3'):
-        temp = sud.copy()
-        input("\nENTER para simular MRV...")
-        resolver_sudoku_mrv_simulado(temp)
+        simular_resolucion(sudoku, "MRV", lambda t: resolver_mrv(t, simular=True))
 
     print("\n¡Fin del programa!")
-
-
