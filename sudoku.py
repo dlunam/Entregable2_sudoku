@@ -165,7 +165,7 @@ def resolver_sudoku_simulado(tablero, delay=0.03):
     return True
 
 # -------------------------------------------------------------------
-# Ejecución principal
+# Ejecución principal con interfaz
 # -------------------------------------------------------------------
 
 def simular_resolucion(tablero, modo, funcion):
@@ -173,8 +173,9 @@ def simular_resolucion(tablero, modo, funcion):
     input(f"\nENTER para simular {modo}...")
     funcion(temp)
 
-if __name__ == "__main__":
+def main():
     while True:
+        limpiar_consola()
         try:
             n = int(input("¿Cuántas casillas vacías quieres en el Sudoku (0–81)?: "))
             if 0 <= n <= 81:
@@ -184,32 +185,51 @@ if __name__ == "__main__":
             print("Introduce un número válido.")
 
     sudoku, solucion = generar_sudoku(n)
-    print("\nSudoku para resolver:")
-    imprimir_tablero(sudoku)
 
-    copia1 = sudoku.copy()
-    resolver_sudoku(copia1)
-    print("\nSolución (Backtracking Estándar):")
-    imprimir_tablero(copia1)
+    while True:
+        print("\n=== MENÚ DE OPCIONES ===")
+        print("1) Mostrar Sudoku")
+        print("2) Resolver Sudoku (mostrar solución y tiempos)")
+        print("3) Simulación Estándar (duración estimada)")
+        print("4) Simulación MRV Mejorado (duración estimada)")
+        print("5) Salir")
+        opcion = input("Selecciona una opción: ").strip()
 
-    t1 = perf_counter()
-    resolver_sudoku(sudoku.copy())
-    t1 = perf_counter() - t1
+        if opcion == "1":
+            limpiar_consola()
+            imprimir_tablero(sudoku)
+            input("\nPresiona Enter para regresar al menú.")
+        
+        elif opcion == "2":
+            limpiar_consola()
+            copia1 = sudoku.copy()
+            resolver_sudoku(copia1)
+            print("\nSolución (Backtracking Estándar):")
+            imprimir_tablero(copia1)
 
-    t2 = perf_counter()
-    resolver_mrv(sudoku.copy())
-    t2 = perf_counter() - t2
+            t1 = perf_counter()
+            resolver_sudoku(sudoku.copy())
+            t1 = perf_counter() - t1
 
-    print(f"\nTiempo Estándar: {t1:.6f} s")
-    print(f"Tiempo MRV Mejorado: {t2:.6f} s")
+            t2 = perf_counter()
+            resolver_mrv(sudoku.copy())
+            t2 = perf_counter() - t2
 
-    print("\n¿Quieres ver simulación paso a paso?")
-    print("1) Estándar\n2) MRV\n3) Ambos\nOtro) Ninguno")
-    opción = input("Elige opción: ").strip()
+            print(f"\nTiempo Estándar: {t1:.6f} s")
+            print(f"Tiempo MRV Mejorado: {t2:.6f} s")
+            input("\nPresiona Enter para regresar al menú.")
+        
+        elif opcion == "3":
+            limpiar_consola()
+            simular_resolucion(sudoku, "Estándar", resolver_sudoku_simulado)
+        
+        elif opcion == "4":
+            limpiar_consola()
+            simular_resolucion(sudoku, "MRV", lambda t: resolver_mrv(t, simular=True))
+        
+        elif opcion == "5":
+            print("¡Fin del programa!")
+            break
 
-    if opción in ('1', '3'):
-        simular_resolucion(sudoku, "Estándar", resolver_sudoku_simulado)
-    if opción in ('2', '3'):
-        simular_resolucion(sudoku, "MRV", lambda t: resolver_mrv(t, simular=True))
-
-    print("\n¡Fin del programa!")
+if __name__ == "__main__":
+    main()
