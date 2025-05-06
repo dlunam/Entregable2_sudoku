@@ -190,8 +190,8 @@ def main():
         print("\n=== MENÚ DE OPCIONES ===")
         print("1) Mostrar Sudoku")
         print("2) Resolver Sudoku (mostrar solución y tiempos)")
-        print("3) Simulación Estándar (duración estimada)")
-        print("4) Simulación MRV Mejorado (duración estimada)")
+        print("3) Simulación Estándar")
+        print("4) Simulación MRV Mejorado")
         print("5) Salir")
         opcion = input("Selecciona una opción: ").strip()
 
