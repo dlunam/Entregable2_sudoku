@@ -70,7 +70,7 @@ def rellenar_sudoku(tablero):
                 return False
     return True
 
-def generar_sudoku(casillas_vacias=40):
+def generar_sudoku(casillas_vacias):
     tablero = crear_tablero()
     rellenar_sudoku(tablero)
     solucion = tablero.copy()
@@ -82,21 +82,29 @@ def generar_sudoku(casillas_vacias=40):
             vaciados += 1
     return tablero, solucion
 
-def resolver_sudoku(tablero):
+# -------------------------------------------------------------------
+# Backtracking Estándar
+# -------------------------------------------------------------------
+
+def backtracking_estandar(tablero, simular=False, delay=0.03):
     for i in range(9):
         for j in range(9):
             if tablero[i][j] == 0:
                 for num in range(1, 10):
                     if es_valido(tablero, i, j, num):
                         tablero[i][j] = num
-                        if resolver_sudoku(tablero):
+                        if simular:
+                            mostrar_estado(tablero, "Simulación Estándar", delay)
+                        if backtracking_estandar(tablero, simular, delay):
                             return True
                         tablero[i][j] = 0
+                        if simular:
+                            mostrar_estado(tablero, "Retroceso Estándar", delay)
                 return False
     return True
 
 # -------------------------------------------------------------------
-# MRV + LCV + Degree
+# Backtracking Mejorado (MRV + LCV + Degree)
 # -------------------------------------------------------------------
 
 def inicializar_dominios(tablero):
@@ -118,7 +126,7 @@ def ordenar_por_lcv(celda, dominios):
     }
     return sorted(valor_impacto, key=valor_impacto.get)
 
-def resolver_mrv(tablero, dominios=None, simular=False, delay=0.03):
+def backtracking_mejorado(tablero, dominios=None, simular=False, delay=0.03):
     if dominios is None:
         dominios = inicializar_dominios(tablero)
     if not dominios:
@@ -128,7 +136,7 @@ def resolver_mrv(tablero, dominios=None, simular=False, delay=0.03):
     for valor in ordenar_por_lcv(celda, dominios):
         tablero[i][j] = valor
         if simular:
-            mostrar_estado(tablero, "Simulación MRV", delay)
+            mostrar_estado(tablero, "Simulación Backtracking Mejorado", delay)
 
         nuevos_dominios = {k: v[:] for k, v in dominios.items()}
         del nuevos_dominios[celda]
@@ -138,31 +146,12 @@ def resolver_mrv(tablero, dominios=None, simular=False, delay=0.03):
                 if not nuevos_dominios[v]:
                     break
         else:
-            if resolver_mrv(tablero, nuevos_dominios, simular, delay):
+            if backtracking_mejorado(tablero, nuevos_dominios, simular, delay):
                 return True
         tablero[i][j] = 0
         if simular:
-            mostrar_estado(tablero, "Retroceso MRV", delay)
+            mostrar_estado(tablero, "Retroceso Backtracking Mejorado", delay)
     return False
-
-# -------------------------------------------------------------------
-# Simulación visual estándar
-# -------------------------------------------------------------------
-
-def resolver_sudoku_simulado(tablero, delay=0.03):
-    for i in range(9):
-        for j in range(9):
-            if tablero[i][j] == 0:
-                for num in range(1, 10):
-                    if es_valido(tablero, i, j, num):
-                        tablero[i][j] = num
-                        mostrar_estado(tablero, "Simulación Estándar", delay)
-                        if resolver_sudoku_simulado(tablero, delay):
-                            return True
-                        tablero[i][j] = 0
-                        mostrar_estado(tablero, "Retroceso Estándar", delay)
-                return False
-    return True
 
 # -------------------------------------------------------------------
 # Ejecución principal con interfaz
@@ -176,7 +165,6 @@ def simular_resolucion(tablero, modo, funcion):
     t1 = perf_counter()
     print(f"\nTiempo de visualización {modo}: {t1 - t0:.6f} s")
     input("\nPresiona Enter para regresar al menú.")
-
 
 def main():
     while True:
@@ -195,8 +183,8 @@ def main():
         print("\n=== MENÚ DE OPCIONES ===")
         print("1) Mostrar Sudoku")
         print("2) Resolver Sudoku (mostrar solución y tiempos)")
-        print("3) Simulación Estándar")
-        print("4) Simulación MRV Mejorado")
+        print("3) Simulación  Backtracking Estándar")
+        print("4) Simulación Backtracking Mejorado")
         print("5) Salir")
         opcion = input("Selecciona una opción: ").strip()
 
@@ -208,29 +196,29 @@ def main():
         elif opcion == "2":
             limpiar_consola()
             copia1 = sudoku.copy()
-            resolver_sudoku(copia1)
+            backtracking_estandar(copia1)
             print("\nSolución (Backtracking Estándar):")
             imprimir_tablero(copia1)
 
             t1 = perf_counter()
-            resolver_sudoku(sudoku.copy())
+            backtracking_estandar(sudoku.copy())
             t1 = perf_counter() - t1
 
             t2 = perf_counter()
-            resolver_mrv(sudoku.copy())
+            backtracking_mejorado(sudoku.copy())
             t2 = perf_counter() - t2
 
-            print(f"\nTiempo Estándar: {t1:.6f} s")
-            print(f"Tiempo MRV Mejorado: {t2:.6f} s")
+            print(f"\nTiempo Backtracking Estándar: {t1:.6f} s")
+            print(f"Tiempo Backtracking Mejorado: {t2:.6f} s")
             input("\nPresiona Enter para regresar al menú.")
         
         elif opcion == "3":
             limpiar_consola()
-            simular_resolucion(sudoku, "Estándar", resolver_sudoku_simulado)
+            simular_resolucion(sudoku, "Backtracking Estándar", lambda t: backtracking_estandar(t, simular=True))
         
         elif opcion == "4":
             limpiar_consola()
-            simular_resolucion(sudoku, "MRV", lambda t: resolver_mrv(t, simular=True))
+            simular_resolucion(sudoku, "Backtracking Mejorado", lambda t: backtracking_mejorado(t, simular=True))
         
         elif opcion == "5":
             print("¡Fin del programa!")
