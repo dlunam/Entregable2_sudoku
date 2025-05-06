@@ -171,7 +171,12 @@ def resolver_sudoku_simulado(tablero, delay=0.03):
 def simular_resolucion(tablero, modo, funcion):
     temp = tablero.copy()
     input(f"\nENTER para simular {modo}...")
+    t0 = perf_counter()
     funcion(temp)
+    t1 = perf_counter()
+    print(f"\nTiempo de visualización {modo}: {t1 - t0:.6f} s")
+    input("\nPresiona Enter para regresar al menú.")
+
 
 def main():
     while True:
