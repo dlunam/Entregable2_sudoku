@@ -130,7 +130,7 @@ def seleccionar_celda(candidatos):
     candidatas = [pos for pos in candidatos if len(candidatos[pos]) == min_dom]
     return max(candidatas, key=lambda pos: sum(1 for v in obtener_vecinos(*pos) if v in candidatos))
 
-# Ordena los valores posibles según LCV (Least Constraining Value): primero los que menos se repiten en los vecinos, ya que son más 
+# LCV (Least Constraining Value): ordena primero aquellos valores que aparecen con menor frecuencia en los vecinos, ya que son más 
 # probables y menos restrictivos.
 def ordenar_por_lcv(celda, candidatos):
     vecinos = obtener_vecinos(*celda)
