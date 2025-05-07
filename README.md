@@ -6,34 +6,34 @@ Este proyecto en Python genera tableros de Sudoku aleatorios y los resuelve util
 
 ---
 
-# Estructura del código
-## 1. Utilidades de Consola y Visualización
+## Estructura del código
+### 1. Utilidades de Consola y Visualización
 
 * `limpiar_consola`: Limpia la consola según el sistema operativo.
 * `imprimir_tablero`: Imprime el tablero con separaciones visuales por bloques 3x3.
 * `mostrar_estado`: Muestra el estado actual del tablero con un mensaje y un pequeño retardo para las simulaciones.
 
 
-## 2. Creación y Validación del Tablero
+### 2. Creación y Validación del Tablero
 
 * `crear_tablero`: Devuelve una matriz 9x9 con ceros.
 * `es_valido`: Verifica si un número puede colocarse en una celda sin violar las reglas del Sudoku (filas, columnas, subcuadros).
 * `obtener_vecinos`: Calcula las celdas vecinas a una dada (en la misma fila, columna o subcuadro 3x3).
 
 
-## 3. Generación y Solución de Tableros
+### 3. Generación y Solución de Tableros
 
 * `rellenar_sudoku`: Rellena el tablero completamente utilizando backtracking para asegurar que tiene solución.
 * `generar_sudoku`: Crea un tablero parcialmente vacío a partir de una solución completa, garantizando un número dado de casillas vacías.
 
 
-## 4. Algoritmos de Solución
+### 4. Algoritmos de Solución
 
-### 4.1 Backtracking Estándar
+#### 4.1 Backtracking Estándar
 
 * `backtracking_estandar`: Implementación clásica sin optimizaciones, explora todas las combinaciones posibles de forma recursiva.
 
-### 4.2 Backtracking Mejorado (con heurísticas)
+#### 4.2 Backtracking Mejorado (con heurísticas)
 
 * `backtracking_mejorado`: Algoritmo optimizado que utiliza:
 
@@ -48,12 +48,12 @@ Funciones auxiliares:
 * `ordenar_por_lcv`: Ordena los valores de una celda de forma que se minimice la restricción sobre otras.
 
 
-## 5. Simulación Visual Paso a Paso
+### 5. Simulación Visual Paso a Paso
 
 * `simular_resolucion`: Ejecuta una simulación visual del algoritmo seleccionado mostrando los cambios paso a paso.
 
 
-## 6. Interfaz de Usuario (CLI)
+### 6. Interfaz de Usuario (CLI)
 
 * `main`: Función principal que proporciona un menú de opciones en consola para:
   - Generar un nuevo tablero con casillas vacías definidas por el usuario.
@@ -72,7 +72,7 @@ Funciones auxiliares:
 
 
 
-## Cómo usarlo
+### Cómo usarlo
 
 1. **Ejecutar el script:**
 
@@ -113,7 +113,7 @@ El algoritmo básico de **backtracking** recursivo prueba diferentes valores en 
 
 Este algoritmo optimiza el proceso utilizando las siguientes heurísticas:
 
----
+
 
 * **MRV (Minimum Remaining Values)**: Prioriza la celda con menos valores posibles para reducir el espacio de búsqueda.
 * **Degree Heuristic**: En caso de empate en MRV, selecciona la celda con mayor número de celdas vecinas afectadas.
@@ -131,12 +131,12 @@ Este algoritmo optimiza el proceso utilizando las siguientes heurísticas:
 
 ---
 
-# Comparación entre Fuerza Bruta y Backtracking
+## Comparación entre Fuerza Bruta y Backtracking
 La fuerza bruta intenta explorar las 9⁸¹ combinaciones posibles, lo cual sería extremadamente costoso en tiempo y recursos. En cambio, el backtracking avanza casilla por casilla, retrocede cuando se incumplen las reglas del Sudoku y permite aplicar técnicas heurísticas. Por eso, es una solución mucho más eficiente y efectiva. 
 
 ---
 
-# Aplicaciones del Backtracking
+## Aplicaciones del Backtracking
 
 Algunas aplicaciones del algoritmo de backtracking incluyen:
 
