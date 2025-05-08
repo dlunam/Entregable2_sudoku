@@ -126,9 +126,10 @@ def inicializar_candidatos(tablero):
 # Selecciona la celda vacía con menos valores posibles (MRV: Minimum Remaining Values), si hay empate, elige la que tenga más 
 #celdas afectadas/vecinos vacíos (Degree Heuristic).
 def seleccionar_celda(candidatos):
-    min_dom = min(len(v) for v in candidatos.values())
-    candidatas = [pos for pos in candidatos if len(candidatos[pos]) == min_dom]
-    return max(candidatas, key=lambda pos: sum(1 for v in obtener_vecinos(*pos) if v in candidatos))
+    min_valores_posibles = min(len(valores) for valores in candidatos.values())   #menor número de valores posibles entre todas las celdas vacías. (MRV)
+    celdas_con_menor_dominio = [pos for pos in candidatos if len(candidatos[pos]) == min_valores_posibles]
+    return max(celdas_con_menor_dominio,key=lambda pos: sum(1 for vecino in obtener_vecinos(*pos) if vecino in candidatos))
+
 
 # LCV (Least Constraining Value): ordena primero aquellos valores que aparecen con menor frecuencia en los vecinos, ya que son más 
 # probables y menos restrictivos.
